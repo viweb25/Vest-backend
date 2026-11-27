@@ -15,9 +15,29 @@ const app = express();
 
 // Middleware
 app.use(helmet());
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://vestsolutions.com',
+  'https://www.vestsolutions.com',
+  'https://vestinnovations.com',
+  'https://www.vestinnovations.com',
+  'https://vestsolution.com',
+  'https://www.vestsolution.com',
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map((u) => u.trim()) : []),
+];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     credentials: true,
   })
 );
